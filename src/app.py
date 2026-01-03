@@ -130,3 +130,16 @@ def unregister_from_activity(activity_name: str, email: str):
     # Remove student
     activity["participants"].remove(email)
     return {"message": f"Unregistered {email} from {activity_name}"}
+
+
+@app.get("/activities/{activity_name}/participants")
+def get_participants(activity_name: str):
+    """Retrieve the list of participants for a specific activity"""
+    # Validate activity exists
+    if activity_name not in activities:
+        raise HTTPException(status_code=404, detail="Activity not found")
+
+    # Get the specific activity
+    activity = activities[activity_name]
+
+    return {"activity": activity_name, "participants": activity["participants"]}

@@ -3,6 +3,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const activitySelect = document.getElementById("activity");
   const signupForm = document.getElementById("signup-form");
   const messageDiv = document.getElementById("message");
+  const participantsForm = document.getElementById("participants-form");
+  const participantsSelect = document.getElementById("activity-participants");
+  const participantsList = document.getElementById("participants-list");
 
   // Function to fetch activities from API
   async function fetchActivities() {
@@ -155,6 +158,63 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  // Fetch participants for a specific activity
+  async function fetchParticipants(activity) {
+    try {
+      const response = await fetch(
+        `/activities/${encodeURIComponent(activity)}/participants`
+      );
+      const result = await response.json();
+
+      if (response.ok) {
+        participantsList.innerHTML = `<h4>Participants for ${result.activity}</h4>`;
+        if (result.participants.length > 0) {
+          const ul = document.createElement("ul");
+          result.participants.forEach((participant) => {
+            const li = document.createElement("li");
+            li.textContent = participant;
+            ul.appendChild(li);
+          });
+          participantsList.appendChild(ul);
+        } else {
+          participantsList.innerHTML += "<p>No participants yet.</p>";
+        }
+      } else {
+        participantsList.innerHTML = `<p>${result.detail || "Failed to fetch participants."}</p>`;
+      }
+    } catch (error) {
+      participantsList.innerHTML = "<p>Error fetching participants. Please try again later.</p>";
+      console.error("Error fetching participants:", error);
+    }
+  }
+
+  // Handle participants form submission
+  participantsForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const selectedActivity = participantsSelect.value;
+    if (selectedActivity) {
+      fetchParticipants(selectedActivity);
+    }
+  });
+
+  // Populate activity options for participants form
+  async function populateParticipantOptions() {
+    try {
+      const response = await fetch("/activities");
+      const activities = await response.json();
+
+      Object.keys(activities).forEach((activity) => {
+        const option = document.createElement("option");
+        option.value = activity;
+        option.textContent = activity;
+        participantsSelect.appendChild(option);
+      });
+    } catch (error) {
+      console.error("Error populating participant options:", error);
+    }
+  }
+
   // Initialize app
   fetchActivities();
+  populateParticipantOptions();
 });
