@@ -40,8 +40,21 @@ def load_activities() -> Dict[str, Any]:
 
 def save_activities(activities: Dict[str, Any]) -> None:
     """Save activities to JSON file"""
-    with open(ACTIVITIES_FILE, 'w') as f:
-        json.dump(activities, f, indent=2)
+    temp_file = ACTIVITIES_FILE + '.tmp'
+    try:
+        # Write to a temporary file first to prevent corruption
+        with open(temp_file, 'w') as f:
+            json.dump(activities, f, indent=2)
+        # Only replace the original file if write was successful
+        os.replace(temp_file, ACTIVITIES_FILE)
+    except Exception as e:
+        # Clean up temp file if it exists
+        if os.path.exists(temp_file):
+            os.remove(temp_file)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to save activities: {str(e)}"
+        )
 
 
 @app.get("/")
